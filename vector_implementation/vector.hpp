@@ -131,31 +131,11 @@ void Vector<T>::assign(size_type count, const_reference value)
 template<typename T>
 void Vector<T>::push_back(const_reference value)
 {
-	if(!m_ptr)
+	if (m_size >= m_capacity) 
 	{
-		m_capacity = 1;
-		m_ptr = new value_type[m_capacity];
-		m_ptr[m_size] = value; 
-		m_size = 1;
-	}
-	else
-	{
-		if(m_capacity == m_size)
-		{
-			m_capacity = m_size * 2;
-			value_type* temp = new value_type[m_capacity];
-			for(size_t i = 0; i < m_size; ++i)
-			{
-				temp[i] = m_ptr[i];
-			}
-			m_ptr[m_size] = value;
-			m_size++;
-		}
-		else
-		{
-			m_ptr[m_size++] = value;
-		}
-	}
+        reserve(m_capacity == 0 ? 1 : m_capacity * 2);
+    }
+	m_ptr[m_size++] = value;
 }
 
 template <typename T>
