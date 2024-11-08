@@ -5,73 +5,88 @@
 // Ctonstructors
 
 template <typename T>
-Vector<T>::Vector() : Size{size_type{}}, Capacity{size_type{}}, ptr{ nullptr }
+Vector<T>::Vector() : m_size{size_type{}}, m_capacity{size_type{}}, m_ptr{ nullptr }
 {
 }
 
 template <typename T>
-Vector<T>::Vector(size_type size) : Size{ size }, Capacity{ size }, ptr{ new value_type[size] }
+Vector<T>::Vector(size_type size) : m_size{ size }, m_capacity{ m_size }, m_ptr{ new value_type[m_size] }
 {
 }
 	
 template <typename T>
-Vector<T>::Vector(size_type size, const_reference value) : Size{ size }, Capacity{ size }, ptr{ new value_type[Size] }
+Vector<T>::Vector(size_type size, const_reference value) : m_size{ size }, m_capacity{ m_size }, m_ptr{ new value_type[m_size] }
 {
-	for (size_type i = 0; i < Size; ++i)
+	for (size_type i = 0; i < m_size; ++i)
 	{
-		ptr[i] = value;
+		m_ptr[i] = value;
 	}
 }
 
 template <typename T>
-Vector<T>::Vector(std::initializer_list<value_type> init) : Size{init.size()}, Capacity{size}, ptr{ new value_type[Size] }
+Vector<T>::Vector(std::initializer_list<value_type> init) : m_size{init.size()}, m_capacity{m_size}, m_ptr{ new value_type[m_size] }
 {
 	size_type i = 0;
 	for (value_type val : init)
 	{
-		ptr[i++] = val;
+		m_ptr[i++] = val;
 	}
 }
 
 template <typename T>
-Vector<T>::Vector(const Vector& other) : Size{ other.Size() }, Capacity{ Size }, ptr{ new value_type[Size] }
+Vector<T>::Vector(const Vector& other) : m_size{ other.m_size }, m_capacity{ m_size }, m_ptr{ new value_type[m_size] }
 {
-	for (size_type i = 0; i < Size; ++i)
+	for (size_type i = 0; i < m_size; ++i)
 	{
-		ptr[i] = other.ptr[i];
+		m_ptr[i] = other.m_ptr[i];
 	}
 }
 
 template <typename T>
-Vector<T>::Vector(Vector&& other) : Size{ other.Size() }, capacity{ Size }, ptr{ other.ptr }
+Vector<T>::Vector(Vector&& other) : m_size{ other.m_size }, m_capacity{ m_size }, m_ptr{ other.m_ptr }
 {
-	other.Size = 0;
-	other.Capacity = 0;
-	other.ptr = nullptr;
+	other.m_size = 0;
+	other.m_capacity = 0;
+	other.m_ptr = nullptr;
 }
 
 template <typename T>
 Vector<T>& Vector<T>::operator=(const Vector<T>& rhs) noexcept
 {
-	delete[]ptr;
-	Size = rhs.size();
-	Capacity = Size;
-	for (size_t i = 0; i < Size; ++i)
+	if(m_ptr)
 	{
-		ptr[i] = othe.ptr[i];
+		delete[] m_ptr;
+		m_size = rhs.m_size;
+		m_capacity = m_size;
+		for (size_t i = 0; i < m_size; ++i)
+		{
+			m_ptr[i] = rhs.m_ptr[i];
+		}
 	}
+	else
+	{
+		m_size = rhs.m_size;
+		m_capacity = m_size;
+		m_ptr = new value_type[m_capacity];
+		for (size_t i = 0; i < m_size; ++i)
+		{
+			m_ptr[i] = rhs.m_ptr[i];
+		}
+	}
+	return *this;
 }
 
 template <typename T>
 Vector<T>& Vector<T>::operator=(Vector<T>&& rhs) noexcept
 {
-	delete[]ptr;
-	Size = rhs.Size();
-	Capacity = Size;
-	ptr = rhs.ptr;
-	rhs.ptr = nullptr;
-	rhs.Size = 0;
-	rhs.Capacity = 0;
+	delete[]m_ptr;
+	m_size = rhs.m_size;
+	m_capacity = m_size;
+	m_ptr = rhs.m_ptr;
+	rhs.m_ptr = nullptr;
+	rhs.m_size = 0;
+	rhs.m_capacity = 0;
+	return *this;
 }
 
 //Destructors
@@ -79,65 +94,66 @@ Vector<T>& Vector<T>::operator=(Vector<T>&& rhs) noexcept
 template <typename T>
 Vector<T>::~Vector()
 {
-	if (ptr != nullptr)
+	if (m_ptr != nullptr)
 	{
-		delete ptr;
-		ptr = nullptr;
+		delete m_ptr;
+		m_ptr = nullptr;
 	}
 }
 
 template <typename T>
-Vector<T>::size_type Vector<T>::size() const
+typename Vector<T>::size_type Vector<T>::size() const
 {
-	return Size;
+	return m_size;
 }
 
 template <typename T>
-Vector<T>::size_type Vector<T>::capacity() const
+typename Vector<T>::size_type Vector<T>::capacity() const
 {
-	return Capacity;
+	return m_capacity;
 }
 
 template <typename T>
 bool Vector<T>::empty() const
 {
-	return ptr == nullptr;
+	return m_ptr == nullptr;
 }
 
 template <typename T>
 void Vector<T>::assign(size_type count, const_reference value)
 {
-	if (count != 0)
+	for (size_type i = 0; i < count; ++i)
 	{
-		this -> resize(count);
-		for (size_type i = 0; i < count; ++i)
-		{
-			ptr[i] = value;
-		}
+		m_ptr[i] = value;
 	}
 }
-
 
 template<typename T>
 void Vector<T>::push_back(const_reference value)
 {
-	if(!ptr)
+	if(!m_ptr)
 	{
-		ptr = new value_type[1];
-		Size = 1;
-		Capacity = 1;
-		ptr[Size - 1] = value; 
+		m_capacity = 1;
+		m_ptr = new value_type[m_capacity];
+		m_ptr[m_size] = value; 
+		m_size = 1;
 	}
 	else
 	{
-		if(Capacity > Size)
+		if(m_capacity == m_size)
 		{
-			ptr[Size++] = value;
+			m_capacity = m_size * 2;
+			value_type* temp = new value_type[m_capacity];
+			for(size_t i = 0; i < m_size; ++i)
+			{
+				temp[i] = m_ptr[i];
+			}
+			m_ptr[m_size] = value;
+			m_size++;
 		}
 		else
 		{
-			this -> resize(Capacity * 2);
-			ptr[Size++] = value;
+			m_ptr[m_size++] = value;
 		}
 	}
 }
@@ -145,127 +161,170 @@ void Vector<T>::push_back(const_reference value)
 template <typename T>
 void Vector<T>::pop_back()
 {
-	if(ptr)
+	if(m_ptr)
 	{
-		Size--;
+		m_size--;
 	}
 }
 
 template <typename T>
-Vector<T>::reference Vector<T>::front()
+typename Vector<T>::reference Vector<T>::front()
 {
-	if(ptr)
-	{
-    	return *ptr;
-	}
+	return *m_ptr;
 }
 
 template <typename T>
-Vector<T>::const_reference Vector<T>::front() const
+typename Vector<T>::const_reference Vector<T>::front() const
 {	
-	if(ptr)
-	{
-    	return *ptr;
-	}
+    return *m_ptr;
 }
 
 template <typename T>
-Vector<T>::reference Vector<T>::back()
+typename Vector<T>::reference Vector<T>::back()
 {
-	if(ptr)
-	{
-		return *(ptr + size - 1);
-	}
+
+	return *(m_ptr + m_size - 1);
 }
 
 template <typename T>
-Vector<T>::const_reference Vector<T>::back() const
+typename Vector<T>::const_reference Vector<T>::back() const
 {
-	if(ptr)
-	{
-    	return *(ptr + size - 1);
-	}
+	return *(m_ptr + m_size - 1);
 }
 
 template <typename T>
-Vector<T>::reference Vector<T>::at(size_type idx)
+typename Vector<T>::reference Vector<T>::at(size_type idx)
 {
-	if(idx >= 0 && ptr)
+	if(idx >= 0 && m_ptr)
 	{
-		return *(ptr + idx);
+		return *(m_ptr + idx);
 	}
 	else
 	{
-		throw std::out_of_range;
+		throw std::out_of_range("Index out of range");
 	}
 }
 
 template <typename T>
-Vector<T>::const_reference Vector<T>::at(size_type idx) const
+typename Vector<T>::const_reference Vector<T>::at(size_type idx) const
 {
-    if(idx >= 0 && ptr)
+    if(idx >= 0 && m_ptr)
 	{
-		return *(ptr + idx);
+		return *(m_ptr + idx);
 	}
 	else
 	{
-		throw std::out_of_range;
+		throw std::out_of_range("Index out of range");
 	}
 }
 
 template <typename T>
-Vector<T>::reference Vector<T>::operator[](size_type idx)
+typename Vector<T>::reference Vector<T>::operator[](size_type idx)
 {
-	return *(ptr + idx);
+	return *(m_ptr + idx);
 }
 
 template <typename T>
-Vector<T>::const_reference Vector<T>::operator[](size_type idx) const
+typename Vector<T>::const_reference Vector<T>::operator[](size_type idx) const
 {
-    return *(ptr + idx);
+    return *(m_ptr + idx);
+}
+
+template <typename T>
+typename Vector<T>::size_type Vector<T>::insert(size_type idx, const_reference value)
+{
+	if(idx > m_size)
+	{
+        throw std::out_of_range("Index out of range for insert");	
+	}
+	if(idx == m_size)
+	{
+		reserve(m_capacity == 0 ? 1 : m_capacity * 2);
+	}
+	for (size_type i = m_size; i > idx; --i) 
+	{
+        m_ptr[i] = m_ptr[i - 1];
+    }
+	m_ptr[idx++] = value;
+    ++m_size;
+	return idx;
+}
+
+template <typename T>
+typename Vector<T>::size_type Vector<T>::insert(size_type idx, std::initializer_list<value_type> init)
+{
+	size_t size = init.size();
+	auto it = idx;
+	for(size_t i = 0; i < size; ++i)
+	{
+		auto it = this -> insert(it, init[i]);
+	}
+    return it; 
+}
+
+template <typename T>
+typename Vector<T>::size_type Vector<T>::erase(size_type idx)
+{
+	for (size_t i = 0; i < m_size - idx - 1; ++i)
+	{
+		m_ptr[idx + i] = m_ptr[idx + i + 1];
+	}
+	m_size--;
+	return idx + 1;
+}
+
+template <typename T>
+typename Vector<T>::size_type Vector<T>::erase(size_type first, size_type last)
+{
+	for(size_t i = first; i < last; ++i)
+	{
+		this -> erase(i);
+	}
+    return last + 1;
 }
 
 template <typename T>
 void Vector<T>::reserve(size_type capacity)
 {
-	if(capacity > Capacity)
+	if(capacity > m_capacity)
 	{
 		value_type *temp = new value_type[capacity];
-		for(size_t i = 0; i < Size; ++i)
+		for(size_t i = 0; i < m_size; ++i)
 		{
-			temp[i] = ptr[i];
+			temp[i] = m_ptr[i];
 		}
-		delete[]ptr;
-		ptr = temp;
+		delete[]m_ptr;
+		m_ptr = temp;
 		temp = nullptr;
+		m_capacity = capacity;
 	}
 }
 
 template <typename T>
 void Vector<T>::resize(size_type size)
 {
-	if(size < Size)
+	if(size < m_size)
 	{
-		size = Size;
+		m_size = size;
 	}
-	if(size > Size)
+	if(size > m_size)
 	{
-		if(Capacity > size)
+		if(m_capacity > size)
 		{
-			Size = size; 
+			m_size = size; 
 		}
 		else
 		{
 			value_type *temp = new value_type[size];
-			for (size_t i = 0; i < Size; ++i)
+			for (size_t i = 0; i < size; ++i)
 			{
-				temp[i] = ptr[i];
+				temp[i] = m_ptr[i];
 			}
-			delete[] ptr;
-			ptr = temp;
+			delete[] m_ptr;
+			m_ptr = temp;
 			temp = nullptr;
-			Size = size;
-			Capacity = size;
+			m_size = size;
+			m_capacity = size;
 		}
 	}
 }
@@ -273,38 +332,36 @@ void Vector<T>::resize(size_type size)
 template <typename T>
 void Vector<T>::resize(size_type size, const_reference value)
 {
-	if(size < Size)
+	if(size < m_size)
 	{
-		size = Size;
+		m_size = size;
 	}
-	if(size > Size)
+	if(size > m_size)
 	{
-		if(Capacity > size)
+		if(m_capacity > size)
 		{
-			for(; Size < size; ++Size)
+			for(; m_size < size; ++m_size)
 			{
-				ptr[Size] = value;
+				m_ptr[m_size] = value;
 			}
 		}
 		else
 		{
 			value_type *temp = new value_type[size];
-			for (size_t i = 0; i < size; ++i)
+			for (size_t i = 0; i < m_size; ++i)
 			{
-				temp[i] = ptr[i];
+				temp[i] = m_ptr[i];
 			}
-			for(;Size < size; ++Size)
+			for(; m_size < size; ++m_size)
 			{
-				ptr[Size] = valuel;
+				m_ptr[m_size] = value;
 			}
-			delete[] ptr;
-			ptr = temp;
+			delete[] m_ptr;
+			m_ptr = temp;
 			temp = nullptr;
-			Capacity = size;
+			m_capacity = m_size;
 		}
 	}
 }
-
-
 
 #endif

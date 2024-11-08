@@ -44,12 +44,12 @@ public:
     size_type erase(size_type first, size_type last);
     void reserve(size_type capacity);
     void resize(size_type size);
-    void resize(size_type size, const_reference value = value_type);
+    void resize(size_type size, const_reference value);
 
 private:
-    size_type Size;
-    size_type Capacity;
-    value_type* ptr;
+    size_type m_size;
+    size_type m_capacity;
+    value_type* m_ptr;
 };
 
 #include "vector.hpp"
